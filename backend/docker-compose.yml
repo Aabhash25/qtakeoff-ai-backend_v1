@@ -1,0 +1,93 @@
+services:
+  web:
+    build: .
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - YOLO_CONFIG_DIR=/app/.yolo_config
+    networks:
+      - backend
+ 
+  db:
+    image: postgres:17
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      POSTGRES_DB: ${POSTGRESQL_DATABASE_NAME}
+      POSTGRES_USER: ${POSTGRESQL_DATABASE_USER}
+      POSTGRES_PASSWORD: ${POSTGRESQL_DATABASE_PASSWORD}
+    networks:
+      - backend
+ 
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - backend
+      
+  celery:
+    build: .
+    command: >
+      celery -A config worker
+            --pool=solo
+            --loglevel=info
+            --max-memory-per-child=8192  
+            --hostname=worker@%h
+    restart: unless-stopped
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - db
+    runtime: nvidia
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+      - YOLO_CONFIG_DIR=/app/.yolo_config
+      - SEND_GRID_API_KEY=${SEND_GRID_API_KEY}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+    # optional hard cap once things are stable
+    # mem_limit: 10g
+    # memswap_limit: -1
+    networks:
+      - backend
+
+  flower:
+    build: .
+    command: celery -A config flower --port=5555
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    environment:
+      - YOLO_CONFIG_DIR=/app/.yolo_config
+      - SEND_GRID_API_KEY=${SEND_GRID_API_KEY}
+      - DEFAULT_FROM_EMAIL=${DEFAULT_FROM_EMAIL}
+    volumes:
+      - flower_yolo_config:/app/.yolo_config
+    networks:
+      - backend
+ 
+ 
+volumes:
+  postgres_data:
+  flower_yolo_config:
+
+networks:
+  backend:

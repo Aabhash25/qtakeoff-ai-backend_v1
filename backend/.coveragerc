@@ -1,0 +1,7 @@
+[run]
+source =
+    .
+omit =
+    */config-3.py
+    */config.py
+    */venv/*

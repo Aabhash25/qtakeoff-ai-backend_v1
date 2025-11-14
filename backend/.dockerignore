@@ -1,0 +1,31 @@
+# --- Python -------------------------------------------------
+*.py[cod]
+__pycache__/
+
+# Virtual environments
+.venv/
+env/
+ENV/
+venv/
+
+# Editor/OS noise
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Runtime artefacts that confuse BuildKit
+*.sock
+*.lock
+celerybeat-schedule
+*.pid
+*.log
+
+# Tests, docs, large media, etc.
+tests/
+docs/
+media/
+staticfiles/
+
+# Git itself
+.git

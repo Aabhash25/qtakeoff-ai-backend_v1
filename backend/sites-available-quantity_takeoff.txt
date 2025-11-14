@@ -1,0 +1,26 @@
+server {
+    listen 80;
+    server_name qtakeoff.ai www.qtakeoff.ai;
+    client_max_body_size 50M;  
+        ssl_certificate /etc/ssl/certs/cloudflare_origin_cert.pem;
+            ssl_certificate_key /etc/ssl/private/cloudflare_origin_key.pem;
+
+
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location /static/ {
+        root /var/www/quantity_takeoff_v4/backend/config/staticfiles/; 
+        # This means static files are served from /var/www/quantity_takeoff_v4/backend/static/
+    }
+    location /media/ {
+        root /var/www/quantity_takeoff_v4/backend/config/media/;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
