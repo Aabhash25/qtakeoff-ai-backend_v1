@@ -48,8 +48,13 @@ class BlueprintExtraInfo(models.Model):
         BlueprintImage, on_delete=models.CASCADE, related_name="extra_info"
     )
     csv_data = models.JSONField(
-        verbose_name="CSV Data", help_text="Imported CSV data as JSON"
+        null=True,  # allow null in DB
+        blank=True,  # allow blank forms
+        default=list,  # ensure default is a list, avoids DB errors
+        verbose_name="CSV Data",
+        help_text="Imported CSV data as JSON",
     )
+
     imported_by = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE, related_name="imported_csv_files"
     )
